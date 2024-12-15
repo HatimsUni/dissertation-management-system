@@ -6,17 +6,22 @@
 				<tr>
 					<th>Name</th>
 					<th>Email</th>
-					<th>Assigned Teacher</th>
-					<th>Status</th>
+					<th>Assigned Teachers</th>
 					<th v-if="isTeacher">Grades</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="student in students" :key="student.id">
+				<tr v-for="student in students" :key="student._id">
 					<td>{{ student.name }}</td>
 					<td>{{ student.email }}</td>
-					<td>{{ student.teacher }}</td>
-					<td>{{ student.status }}</td>
+					<td>
+						<select v-model="student.teacherIds" multiple class="form-control"
+							@change="assignTeachersToStudent(student)">
+							<option v-for="teacher in teachers" :key="teacher._id" :value="teacher._id">
+								{{ teacher.name }}
+							</option>
+						</select>
+					</td>
 					<td v-if="isTeacher">
 						<div class="input-group">
 							<input type="text" class="form-control" v-model="student.grades[teacherId]"
@@ -33,29 +38,43 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
+	async fetch() {
+		console.log('Hello')
+		await this.fetchStudents();
+		this.students = this.allStudents
+		console.log(this.students)
+		await this.fetchTeachers();
+		this.teachers = this.allTeachers
+	},
 	props: {
 		isTeacher: {
 			type: Boolean,
 			default: false,
 		},
-		teacherId: {
-			type: String,
-			default: '',
-		},
 	},
+	data: () => ({
+		students: [],
+		teachers: []
+	}),
 	computed: {
-		...mapGetters(['getStudents']),
-		students() {
-			return this.getStudents;
-		},
+		...mapGetters(['allStudents', 'allTeachers']),
 	},
 	methods: {
+		...mapActions({
+			assignTeachers: 'assignTeachers',
+			fetchTeachers: 'fetchTeachers',
+			fetchStudents: 'fetchStudents',
+		}),
 		submitGrades(student) {
 			// Logic to handle grade submission
 			student.status = 'Graded'; // Update status on submission
+		},
+		assignTeachersToStudent(student) {
+			// Call the action to update the student's assigned teachers in the store
+			this.assignTeachers({ studentId: student._id, teacherIds: student.teacherIds });
 		},
 	},
 };

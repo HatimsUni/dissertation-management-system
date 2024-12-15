@@ -1,7 +1,14 @@
 <template>
 	<div class="container mt-5">
 		<h1 class="text-center mb-4">Admin Dashboard</h1>
-		<StudentForm :addStudent="addStudent" />
+		<div class="row">
+			<div class="col-md-6">
+				<StudentForm />
+			</div>
+			<div class="col-md-6">
+				<TeacherForm />
+			</div>
+		</div>
 		<div class="mt-4">
 			<StudentList :students="students" @assignTeacher="assignTeacher" />
 		</div>
@@ -15,17 +22,26 @@
 import StudentForm from './components/StudentForm.vue';
 import StudentList from './components/StudentList.vue';
 import { mapGetters, mapActions } from 'vuex';
+import TeacherForm from './components/TeacherForm.vue';
 
 export default {
-	components: { StudentForm, StudentList },
+	components: { StudentForm, StudentList, TeacherForm },
+	async fetch() {
+		await this.fetchStudents;
+		console.log(this.getStudents)
+	},
 	computed: {
-		...mapGetters(['getStudents']),
+		...mapGetters({ getStudents: 'allStudents' }),
 		students() {
 			return this.getStudents;
 		},
 	},
 	methods: {
-		...mapActions({ addStudent: 'addStudent', assignTeacher: 'assignTeacher' }),
+		...mapActions({
+			addStudent: 'addStudent',
+			fetchStudents: 'fetchStudents',
+			assignTeacher: 'assignTeacher'
+		}),
 	},
 };
 </script>

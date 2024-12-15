@@ -1,5 +1,8 @@
+// src/store/index.js
 import Vue from 'vue';
 import Vuex from 'vuex';
+import { getStudents, addStudent, assignTeachersToStudent, submitGrades } from '../api/studentApi';
+import { getTeachers, addTeacher } from '../api/teacherApi';
 
 Vue.use(Vuex);
 
@@ -9,27 +12,48 @@ export default new Vuex.Store({
     teachers: [],
   },
   mutations: {
+    SET_STUDENTS(state, students) {
+      state.students = students;
+    },
     ADD_STUDENT(state, student) {
       state.students.push(student);
     },
-    ASSIGN_TEACHER(state, { studentId, teacher }) {
-      const student = state.students.find(s => s.id === studentId);
-      if (student) {
-        student.teacher = teacher;
-      }
+    SET_TEACHERS(state, teachers) {
+      state.teachers = teachers;
     },
-    // Add more mutations as needed
+    ADD_TEACHER(state, teacher) {
+      state.teachers.push(teacher);
+    },
   },
   actions: {
-    addStudent({ commit }, student) {
-      commit('ADD_STUDENT', student);
+    async fetchStudents({ commit }) {
+      const students = await getStudents();
+      commit('SET_STUDENTS', students);
     },
-    assignTeacher({ commit }, payload) {
-      commit('ASSIGN_TEACHER', payload);
+    async createStudent({ commit }, student) {
+      const newStudent = await addStudent(student);
+      console.log("Hello")
+      commit('ADD_STUDENT', newStudent);
+    },
+    async assignTeachers({ commit }, { studentId, teacherIds }) {
+      const updatedStudent = await assignTeachersToStudent(studentId, teacherIds);
+      commit('SET_STUDENTS', this.state.students.map(student => student._id === studentId ? updatedStudent : student));
+    },
+    async submitStudentGrades({ commit }, { studentId, grades }) {
+      const updatedStudent = await submitGrades(studentId, grades);
+      commit('SET_STUDENTS', this.state.students.map(student => student._id === studentId ? updatedStudent : student));
+    },
+    async fetchTeachers({ commit }) {
+      const teachers = await getTeachers();
+      commit('SET_TEACHERS', teachers);
+    },
+    async createTeacher({ commit }, teacher) {
+      const newTeacher = await addTeacher(teacher);
+      commit('ADD_TEACHER', newTeacher);
     },
   },
   getters: {
-    getStudents: state => state.students,
-    // Add more getters as needed
+    allStudents: (state) => state.students,
+    allTeachers: (state) => state.teachers,
   },
 });
